@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate,logout,login
 from .models import *
 from datetime import date
+from django.contrib import messages
 
 # Create your views here.
 
@@ -94,7 +95,7 @@ def Admin_Login(request):
         p = request.POST['pwd']
         user = authenticate(username=u, password=p)
         try:
-            if user.is_staff:
+            if user.is_superuser:
                 login(request, user)
                 error = "yes"
             else:
@@ -104,10 +105,46 @@ def Admin_Login(request):
     d = {'error': error}
     return render(request,'loginadmin.html',d)
 
+def signupvender(request):
+    
+    if request.method == 'POST':
+        firstname = request.POST['fname']
+        lastname = request.POST['lname']
+        username = request.POST['uname']
+        password = request.POST['pwd']
+        address = request.POST['add']
+        email = request.POST['email']
+        image = request.FILES['img']
+        contact = request.POST['contact']
+        user = User.objects.create_user(username=username, email=email, password=password, first_name=firstname,last_name=lastname,is_staff = True)
+        Vendor.objects.create(user=user,  address=address, contact=contact,image=image)
+        return redirect("loginvender")
+    return render(request,"signupvender.html")
+
+def loginvender(request):
+    if request.method == "POST":
+        username = request.POST.get('uname')
+        password = request.POST.get('pwd')   
+        user = authenticate(request,username = username , password = password)  
+        if user is not None:
+            if user.is_staff and not user.is_superuser:
+                login(request,user)
+                return redirect('vendor_home')
+            else:
+                messages.success(request,'invalid details ')
+    return render(request,"loginvender.html")
+
+
+
 
 def Logout(request):
     logout(request)
     return redirect('home')
+
+# vendor homepage logic
+def vendor_home(request):
+    
+    return render(request,"vendor_home.html")
 
 
 def View_user(request):
@@ -116,6 +153,14 @@ def View_user(request):
     pro = Profile.objects.all()
     d = {'user':pro}
     return render(request,'view_user.html',d)
+
+def view_vendors(request):
+    if not request.user.is_authenticated:
+        return redirect('login_admin')
+    pro = Vendor.objects.all()
+    d = {'user':pro}
+    return render(request,'view_vendors.html',d)
+
 
 
 def Add_Product(request):
@@ -130,7 +175,9 @@ def Add_Product(request):
         i = request.FILES['img']
         d = request.POST['desc']
         ct = Category.objects.get(name=c)
-        Product.objects.create(category=ct, name=p, price=pr, image=i, desc=d)
+        v=Vendor.objects.get(user=request.user.id)
+        
+        Product.objects.create(category=ct, name=p,vendor=v, price=pr, image=i, desc=d)
         error=True
     d = {'cat': cat,'error':error}
     return render(request, 'add_product.html', d)
@@ -165,6 +212,7 @@ def View_feedback(request):
     feed = Send_Feedback.objects.all()
     d = {'feed': feed}
     return render(request, 'view_feedback.html', d)
+
 
 
 def View_prodcut(request,pid):
@@ -242,6 +290,35 @@ def View_Booking(request):
     return render(request, 'view_booking.html', d)
 
 
+def view_orders_vendor(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    cart = Cart.objects.all()
+    book = Booking.objects.all()
+    num1=0
+    for i in cart:
+        num1 += 1
+    d = {'book': book,'num1':num1}
+    return render(request,"view_orders_vendor.html",d)
+
+def view_orders(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return redirect('login_vender')  # Redirect to vendor login if not authenticated or not a vendor.
+
+    vendor = Vendor.objects.get(user=request.user)  # Get the vendor object linked to the logged-in user.
+    products = Product.objects.filter(vendor=vendor)  # Fetch all products added by the vendor.
+    # orders = Booking.objects.filter(product__in=products)  # Fetch all bookings related to the vendor's products.
+
+    # total_orders = orders.count()  # Count of total orders.
+    
+    # d = {
+    #     'orders': orders,
+    #     'total_orders': total_orders,
+    # }
+    return render(request, 'view_orders.html')
+
+
 def Feedback(request, pid):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -291,6 +368,31 @@ def Change_Password(request):
             error = "not"
     d = {'error':error,'num1':num1}
     return render(request,'change_password.html',d)
+
+
+def vendor_change_password(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    error = ""
+    num1=0
+    user = User.objects.get(id=request.user.id)
+    vendor1 = Vendor.objects.get(user=user)
+    # cart = Cart.objects.filter(profile=vendor1)  # Replace 'profile' with the correct field in the Cart model
+    # for i in cart:
+    #     num1 += 1
+    if request.method=="POST":
+        n = request.POST['pwd1']
+        c = request.POST['pwd2']
+        o = request.POST['pwd3']
+        if c == n:
+            u = User.objects.get(username__exact=request.user.username)
+            u.set_password(n)
+            u.save()
+            error = "yes"
+        else:
+            error = "not"
+    d = {'error':error,'num1':num1}
+    return render(request,'vendor_change_password.html',d)
 
 def Add_Cart(request,pid):
     if not request.user.is_authenticated:
@@ -452,6 +554,29 @@ def admin_booking_detail(request,pid,bid,uid):
     d = {'profile':profile,'cart':cart,'total':total,'num1':num1,'book':li2,'product':product,'total':book}
     return render(request,'admin_view_booking_detail.html',d)
 
+
+def vendor_view_booking_detail(request,pid,bid,uid):
+    if not request.user.is_authenticated:
+        return redirect('login_admin')
+    user = User.objects.get(id=uid)
+    profile = Profile.objects.get(user=user)
+    cart =  Cart.objects.filter(profile=profile).all()
+    product = Product.objects.all()
+    book = Booking.objects.get(booking_id=pid, id=bid)
+    total=0
+    num1=0
+    user1 = user.username
+    li = book.booking_id.split('.')
+    li2=[]
+    for j in li:
+        if user1!= j :
+            li2.append(int(j))
+    for i in cart:
+        total+=i.product.price
+        num1+=1
+    d = {'profile':profile,'cart':cart,'total':total,'num1':num1,'book':li2 ,'product':product,'total':book}
+    return render(request,'vendor_view_booking_detail.html',d)
+
 def Edit_status(request,pid,bid):
     if not request.user.is_authenticated:
         return redirect('login_admin')
@@ -476,6 +601,14 @@ def Admin_View_product(request):
     d = {'pro':pro}
     return render(request,'admin_view_product.html',d)
 
+def vendor_view_product(request):
+    if not request.user.is_authenticated:
+        return redirect('login_vendor')
+    v=Vendor.objects.get(user=request.user.id)
+    pro = Product.objects.filter(vendor = v)
+    d = {'pro':pro}
+    return render(request,'vendor_view_product.html',d)
+
 def delete_product(request,pid):
     if not request.user.is_authenticated:
         return redirect('login_admin')
@@ -486,13 +619,9 @@ def delete_product(request,pid):
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    user = User.objects.get(id=request.user.id)
-    pro = Profile.objects.get(user=user)
-    cart=""
-    try:
-        cart = Cart.objects.get(profile=pro)
-    except:
-        pass
+    profile = request.user.id
+    cart = Cart.objects.filter(profile=profile)
+    
     num1 = 0
     total = 0
     for i in cart:
@@ -507,19 +636,18 @@ def profile(request):
 def Edit_profile(request):
     if not request.user.is_authenticated:
         return redirect('login')
+    
     error = False
-    user=User.objects.get(id=request.user.id)
+    user = request.user.id
     pro = Profile.objects.get(user=user)
-    cart = ""
-    try:
-        cart = Cart.objects.get(profile=pro)
-    except:
-        pass
-    num1=0
-    total=0
+    cart = Cart.objects.filter(profile=pro)  # Use filter() instead of get()
+    
+    num1 = 0
+    total = 0
     for i in cart:
-        total+=i.product.price
-        num1+=1
+        total += i.product.price
+        num1 += 1
+    
     if request.method == 'POST':
         f = request.POST['fname']
         l = request.POST['lname']
@@ -534,10 +662,8 @@ def Edit_profile(request):
             i = request.FILES['img']
             pro.image = i
             pro.save()
-
         except:
             pass
-
 
         if d:
             try:
@@ -548,17 +674,76 @@ def Edit_profile(request):
         else:
             pass
 
-        pro.user.username=u
-        pro.user.first_name=f
-        pro.user.last_name=l
-        pro.user.email=e
-        pro.contact=con
-        pro.city=c
-        pro.address=ad
+        pro.user.username = u
+        pro.user.first_name = f
+        pro.user.last_name = l
+        pro.user.email = e
+        pro.contact = con
+        pro.city = c
+        pro.address = ad
         pro.save()
         error = True
-    d = {'error':error,'pro':pro,'num1':num1,'total':total}
-    return render(request, 'edit_profile.html',d)
+    
+    d = {'error': error, 'pro': pro, 'num1': num1, 'total': total}
+    return render(request, 'edit_profile.html', d)
+
+
+
+# vendor edit profile
+def Vendor_Edit_profile(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    error = False
+    user = request.user.id
+    pro = Profile.objects.get(user=user)
+    cart = Cart.objects.filter(profile=pro)  # Use filter() instead of get()
+    
+    num1 = 0
+    total = 0
+    for i in cart:
+        total += i.product.price
+        num1 += 1
+    
+    if request.method == 'POST':
+        firstname = request.POST['firstname']
+        lastname = request.POST['lastname']
+        username = request.POST['username']
+        password = request.POST['password']
+        address = request.POST['address']
+        email = request.POST['email']
+        contact = request.POST['contact']
+
+        try:
+            image = request.FILES['image']
+            pro.image = image
+            pro.save()
+        except:
+            pass
+
+        if d:
+            try:
+                pro.dob = d
+                pro.save()
+            except:
+                pass
+        else:
+            pass
+
+        pro.user.username = username
+        pro.user.first_name = firstname
+        pro.user.last_name = lastname
+        pro.user.email = email
+        pro.contact = contact
+        pro.user.address = address 
+        pro.user.password = password
+        pro.save()
+        error = True
+    
+    d = {'error': error, 'pro': pro, 'num1': num1, 'total': total}
+    return render(request, 'vendor_edit_profile.html', d)
+
+   
 
 def Admin_Home(request):
     if not request.user.is_authenticated:

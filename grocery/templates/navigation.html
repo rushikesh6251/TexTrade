@@ -65,7 +65,7 @@
 }
 
 .button {
-  background-color: orange; /* Green */
+  background-color: #67A9B8; 
   border: none;
   color: white;
   padding: 10px;
@@ -136,18 +136,21 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body style="background-color:white">
-<nav class="navbar navbar-expand-sm" style = "background-color : #E50000 ; border-bottom:1px solid #91DE00">
-  <!-- Brand -->
+  <nav class="navbar navbar-expand-sm" style = "background-color : #004E64 ; border-bottom:1px solid #67A9B8">
+    <!-- Brand -->
   
   <a class="navbar-brand pl-5" href="#" style="color:white ; font-weight : bold" >TexTrade-Solapur</a>
 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
     <span class="navbar-toggler-icon"></span>
   </button>
 
+
+  {% comment %} admin side homepage {% endcomment %}
+
 <div class="collapse navbar-collapse" id="collapsibleNavbar">
   <!-- Links -->
   <ul class="navbar-nav pl-5 text-center">
-    {% if request.user.is_staff %}
+    {% if request.user.is_superuser %}
     <li class="nav-item">
       <a class="nav-link" href="{% url 'admin_home' %}" style="color:white"><ion-icon style="margin-right:2px" name="home-sharp"></ion-icon>Home</a>
     </li>
@@ -161,7 +164,9 @@
 <li class="nav-item">
       <a class="nav-link" href="{% url 'view_feedback' %}" style="color:white"><ion-icon style="margin-right:2px" name="chatbubbles"></ion-icon>View Feedback</a>
     </li>
-
+      <li class="nav-item">
+      <a class="nav-link" href="{% url 'view_vendors' %}" style="color:white"><ion-icon style="margin-right:2px" name="chatbubbles"></ion-icon>View Vendors</a>
+      </li>
   </li>
 
     <li class="nav-item dropdown">
@@ -181,7 +186,36 @@
   </li>
     {% endif %}
 
+{% comment %} vendor side homepage {% endcomment %}
+<div class="collapse navbar-collapse" id="collapsibleNavbar">
+  <!-- Links -->
+  <ul class="navbar-nav pl-5 text-center">
+    {% if request.user.is_staff and not request.user.is_superuser %}
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'vendor_home' %}" style="color:white"><ion-icon style="margin-right:2px" name="home-sharp"></ion-icon>Home</a>
+    </li>
+      <li class="nav-item">
+      <a class="nav-link" href="{% url 'view_orders_vendor' %}" style="color:white"><ion-icon style="margin-right:2px" name="logo-bitcoin"></ion-icon>View Orders</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'vendor_change_password' %}" style="color:white"><ion-icon style="margin-right:2px" name="document-text-sharp"></ion-icon>Change Password</a>
+    </li>
+<li class="nav-item">
+      <a class="nav-link" href="{% url 'view_feedback' %}" style="color:white"><ion-icon style="margin-right:2px" name="chatbubbles"></ion-icon>View Feedback</a>
+    </li>   
 
+
+  </li>
+
+    <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" style="color:white"><ion-icon style="margin-right:4px" name="albums"></ion-icon>Product</a>
+    <div class="dropdown-menu">
+      <a class="dropdown-item" href="{% url 'add_product' %}">Add Product</a>
+      <a class="dropdown-item" href="{% url 'vendor_view_product' %}">View Product</a>
+    </div>
+  </li>
+    {% endif %}
+    
     {% if request.user.username %}
     {% if not request.user.is_staff %}
     <li class="nav-item">
@@ -243,6 +277,9 @@
             <a class="nav-link" href="{% url 'login_admin' %}" style="color:white;text-align:right"><ion-icon style="margin-right:2px" name="log-in-sharp"></ion-icon>Admin Login</a>
       </li>
 
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'loginvender' %}" style="color:white;text-align:right"><ion-icon style="margin-right:2px" name="log-in-sharp"></ion-icon>Vendor Login</a>
+  </li>
     {% endif %}
 
     {% if not request.user.is_staff %}
@@ -262,7 +299,5 @@
 {% block body %}
 
 {% endblock %}
-
-
 
 </body></html>

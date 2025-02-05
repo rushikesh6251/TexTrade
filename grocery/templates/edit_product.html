@@ -51,15 +51,16 @@
 </div>
 </div>
 
-{% if error "no" %}
+{% if error == "no" %}
 <script>
     alert('Product detail has been updated.');
     window.location=('{% url 'edit_product' product.id %}');
 </script>
 {% endif %}
-{% if error "yes" %}
+
+{% if error == "yes" %}
 <script>
-    alert('Something went wrong,Try Again...');
+    alert('Something went wrong, Try Again...');
 </script>
 {% endif %}
 

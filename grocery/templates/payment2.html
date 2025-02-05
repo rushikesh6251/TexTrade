@@ -3,8 +3,8 @@
 {% load static %}
 {% block body %}
 <div class="container">
-<center><h3 style="color:red">PAYMENT DETAIL</h3><hr> </center>
-<center>
+<center><h3 style="color:red">PAYMENT PAGE</h3><hr> </center>
+{% comment %} <center>
 <div style="width:55%;background-color:lightgrey" class="jumbotron">
 <div class="container">
     <div class="row">
@@ -19,13 +19,13 @@
         <div class="col-xs-4 col-md-4">
             <img style="width:150px;height:100px" class="img-responsive pull-right" src="{% static 'images/atm3.jpg'%}">
         </div>
-    </div>
+    </div> {% endcomment %}
 
      <form action="{% url 'view_booking' %}" method="POST">
          {% csrf_token %}
 
 
- <div class="row">
+ {% comment %} <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label  style="margin:10px" for="cardNumber">CARD NUMBER</label>
@@ -106,8 +106,59 @@
                         </div>
                         </form>
                     </div>
-</div></center></div>
+</div></center></div> {% endcomment %}
+{% comment %} <h2 align="center" class="">PAYMENT</h2><br> {% endcomment %}
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-6 ">Scan The QR code through your upi application</div>
+  <div class="col-lg-4"></div>
+</div></br>
 
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-6 "><img src="paymentqr.jpg" alt="Upi ID:rushikesh6251@axl" style="img"></img>
+  </div>
+  <div class="col-lg-4"></div>
+</div></br>
+
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-3">Enter transaction Id of your Payment</div>
+  <div class="col-lg-1"></div>
+</div></br>
+
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-3"><input type="text" name="transid" class="form-control" placeholder="Enter transaction ID">
+    <p id="a"></p>
+  </div>
+  <div class="col-lg-1"></div>
+</div></br>
+
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-3 "> delivery Address </div>
+  <div class="col-lg-3">Mobile number</div>
+  <div class="col-lg-4"></div>
+</div></br>
+
+<div class="row">
+  <div class="col-lg-2"></div>
+  <div class="col-lg-3 text-primary"><textarea name="deladdress"
+   class="form-control address-textarea" cols="50" placeholder="Enter Delivery Address" ></textarea  name="delmno" ><p id="b"></p> <br></div>
+  <div class="col-lg-3"><input type="text" name="delmno" class="form-control" placeholder="Enter Mobile Number" ><p id="c"></p></div>
+  <div class="col-lg-4"></div>
+</div></br>
+
+<!-- Add a hidden input field to store the unique ID -->
+<input type="hidden" id="uniqueorderid" name="uniqueorderid">
+
+<div class="row">
+    <div class="col-lg-5"></div>
+      <div class="col-lg-3"><input type="submit" class="btn btn-success btn-lg">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="mycart.php" class="btn btn-danger btn-lg">Back</a></div>
+          
+    <div class="col-lg-3"></div>
+  </div><br>
 {% if error %}
 <script>
     alert('Booking order Successfully');

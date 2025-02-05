@@ -6,9 +6,21 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+class Vendor(models.Model):
+    id = models.AutoField(primary_key=True) 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    is_vendor = models.BooleanField(default=True)
+    address = models.CharField(max_length=50, null=True)
+    contact = models.CharField(max_length=10, null=True)
+    image = models.FileField(null=True)
 
+    def __str__(self):
+        return self.user.username
+    
 class Product(models.Model):
+    id = models.AutoField(primary_key=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, null=True)
     image = models.FileField(upload_to='images/', null=True)
     name = models.CharField(max_length=30, null=True)
     price = models.IntegerField(null=True)
@@ -22,8 +34,12 @@ class Status(models.Model):
 
     def __str__(self):
         return self.name
+    
 
+    
+    
 class Profile(models.Model):
+    id = models.AutoField(primary_key=True) 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     dob = models.DateField(null=True)
     city = models.CharField(max_length=30, null=True)
@@ -34,11 +50,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+    
 
 
 class Cart(models.Model):
     profile = models.ForeignKey(Profile,on_delete=models.CASCADE,null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    
     def __str__(self):
         return self.profile.user.username + " . " + self.product.name
 
